@@ -1,2 +1,4 @@
 export * from './types';
 export { Database } from './database';
+export * from './curves';
+export { TaskService } from './task-service';
