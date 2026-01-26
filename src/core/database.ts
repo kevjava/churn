@@ -15,6 +15,8 @@ import {
   CurveType,
   CurveConfig,
   RecurrencePattern,
+  ExportData,
+  ImportResult,
 } from './types';
 
 const SCHEMA = `
@@ -499,6 +501,201 @@ export class Database {
 
   getPath(): string {
     return this.path;
+  }
+
+  // ===== EXPORT/IMPORT =====
+
+  async getAllCompletions(): Promise<Completion[]> {
+    const stmt = this.db.prepare('SELECT * FROM completions ORDER BY completed_at DESC');
+    const rows = stmt.all() as CompletionRow[];
+    return rows.map((row) => this.rowToCompletion(row));
+  }
+
+  async export(): Promise<ExportData> {
+    const tasks = await this.getTasks();
+    const buckets = await this.getBuckets();
+    const completions = await this.getAllCompletions();
+
+    return {
+      version: '1.0.0',
+      exported_at: new Date().toISOString(),
+      buckets: buckets.map((b) => ({
+        id: b.id,
+        name: b.name,
+        type: b.type,
+        config: b.config,
+      })),
+      tasks: tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        project: t.project,
+        bucket_id: t.bucket_id,
+        tags: t.tags,
+        deadline: t.deadline?.toISOString(),
+        estimate_minutes: t.estimate_minutes,
+        recurrence_pattern: t.recurrence_pattern,
+        last_completed_at: t.last_completed_at?.toISOString(),
+        next_due_at: t.next_due_at?.toISOString(),
+        window_start: t.window_start,
+        window_end: t.window_end,
+        dependencies: t.dependencies,
+        curve_config: t.curve_config,
+        status: t.status,
+        created_at: t.created_at.toISOString(),
+        updated_at: t.updated_at.toISOString(),
+      })),
+      completions: completions.map((c) => ({
+        id: c.id,
+        task_id: c.task_id,
+        completed_at: c.completed_at.toISOString(),
+        actual_minutes: c.actual_minutes,
+        scheduled_minutes: c.scheduled_minutes,
+        variance_minutes: c.variance_minutes,
+        interruptions: c.interruptions,
+        notes: c.notes,
+        day_of_week: c.day_of_week,
+        hour_of_day: c.hour_of_day,
+        competing_tasks: c.competing_tasks,
+      })),
+    };
+  }
+
+  async import(data: ExportData, merge = false): Promise<ImportResult> {
+    const result: ImportResult = {
+      buckets: { imported: 0, skipped: 0 },
+      tasks: { imported: 0, skipped: 0 },
+      completions: { imported: 0, skipped: 0 },
+    };
+
+    return this.transaction(() => {
+      // Clear existing data if not merging
+      if (!merge) {
+        this.db.exec('DELETE FROM completions');
+        this.db.exec('DELETE FROM tasks');
+        this.db.exec('DELETE FROM buckets');
+      }
+
+      // Import buckets
+      for (const bucket of data.buckets) {
+        if (merge) {
+          const existing = this.db.prepare('SELECT id FROM buckets WHERE name = ?').get(bucket.name);
+          if (existing) {
+            result.buckets.skipped++;
+            continue;
+          }
+        }
+
+        this.db.prepare(`
+          INSERT INTO buckets (id, name, type, config, created_at, updated_at)
+          VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
+        `).run(
+          merge ? null : bucket.id,
+          bucket.name,
+          bucket.type,
+          JSON.stringify(bucket.config ?? {})
+        );
+        result.buckets.imported++;
+      }
+
+      // Build bucket ID mapping for merge mode
+      const bucketIdMap = new Map<number, number>();
+      if (merge) {
+        for (const bucket of data.buckets) {
+          const existing = this.db.prepare('SELECT id FROM buckets WHERE name = ?').get(bucket.name) as { id: number } | undefined;
+          if (existing) {
+            bucketIdMap.set(bucket.id, existing.id);
+          }
+        }
+      }
+
+      // Import tasks
+      const taskIdMap = new Map<number, number>();
+      for (const task of data.tasks) {
+        if (merge) {
+          const existing = this.db.prepare('SELECT id FROM tasks WHERE title = ? AND created_at = ?').get(task.title, task.created_at);
+          if (existing) {
+            result.tasks.skipped++;
+            continue;
+          }
+        }
+
+        const bucketId = task.bucket_id
+          ? (merge ? bucketIdMap.get(task.bucket_id) ?? task.bucket_id : task.bucket_id)
+          : null;
+
+        const stmt = this.db.prepare(`
+          INSERT INTO tasks (
+            id, title, project, bucket_id, tags, deadline, estimate_minutes,
+            recurrence_mode, recurrence_pattern, last_completed_at, next_due_at,
+            window_start, window_end, dependencies, curve_config, status,
+            created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+
+        const info = stmt.run(
+          merge ? null : task.id,
+          task.title,
+          task.project ?? null,
+          bucketId,
+          JSON.stringify(task.tags ?? []),
+          task.deadline ?? null,
+          task.estimate_minutes ?? null,
+          task.recurrence_pattern?.mode ?? null,
+          task.recurrence_pattern ? JSON.stringify(task.recurrence_pattern) : null,
+          task.last_completed_at ?? null,
+          task.next_due_at ?? null,
+          task.window_start ?? null,
+          task.window_end ?? null,
+          JSON.stringify(task.dependencies ?? []),
+          JSON.stringify(task.curve_config),
+          task.status,
+          task.created_at,
+          task.updated_at
+        );
+
+        if (merge) {
+          taskIdMap.set(task.id, info.lastInsertRowid as number);
+        }
+        result.tasks.imported++;
+      }
+
+      // Import completions
+      for (const completion of data.completions) {
+        const taskId = merge
+          ? taskIdMap.get(completion.task_id) ?? completion.task_id
+          : completion.task_id;
+
+        // Check if task exists
+        const taskExists = this.db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
+        if (!taskExists) {
+          result.completions.skipped++;
+          continue;
+        }
+
+        this.db.prepare(`
+          INSERT INTO completions (
+            id, task_id, completed_at, actual_minutes, scheduled_minutes,
+            variance_minutes, interruptions, notes, day_of_week, hour_of_day,
+            competing_tasks, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        `).run(
+          merge ? null : completion.id,
+          taskId,
+          completion.completed_at,
+          completion.actual_minutes ?? null,
+          completion.scheduled_minutes ?? null,
+          completion.variance_minutes ?? null,
+          completion.interruptions ?? 0,
+          completion.notes ?? null,
+          completion.day_of_week,
+          completion.hour_of_day,
+          completion.competing_tasks ?? null
+        );
+        result.completions.imported++;
+      }
+
+      return result;
+    });
   }
 
   // ===== PRIVATE HELPERS =====

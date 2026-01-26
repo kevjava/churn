@@ -9,6 +9,7 @@ import { error, success } from './format';
 import { registerTaskCommands } from './commands/task';
 import { registerBucketCommands } from './commands/bucket';
 import { registerPriorityCommand } from './commands/priority';
+import { registerDataCommands } from './commands/data';
 
 const program = new Command();
 
@@ -47,6 +48,7 @@ program
 registerTaskCommands(program);
 registerBucketCommands(program);
 registerPriorityCommand(program);
+registerDataCommands(program);
 
 // Handle cleanup on exit
 process.on('beforeExit', async () => {

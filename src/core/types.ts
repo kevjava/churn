@@ -245,3 +245,60 @@ export interface CompletionRow {
   competing_tasks: number | null;
   created_at: string; // ISO 8601
 }
+
+// ===== EXPORT/IMPORT TYPES =====
+
+export interface ExportedBucket {
+  id: number;
+  name: string;
+  type: string;
+  config: Record<string, unknown>;
+}
+
+export interface ExportedTask {
+  id: number;
+  title: string;
+  project?: string;
+  bucket_id?: number;
+  tags: string[];
+  deadline?: string;
+  estimate_minutes?: number;
+  recurrence_pattern?: RecurrencePattern;
+  last_completed_at?: string;
+  next_due_at?: string;
+  window_start?: string;
+  window_end?: string;
+  dependencies: number[];
+  curve_config: CurveConfig;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExportedCompletion {
+  id: number;
+  task_id: number;
+  completed_at: string;
+  actual_minutes?: number;
+  scheduled_minutes?: number;
+  variance_minutes?: number;
+  interruptions?: number;
+  notes?: string;
+  day_of_week: number;
+  hour_of_day: number;
+  competing_tasks?: number;
+}
+
+export interface ExportData {
+  version: string;
+  exported_at: string;
+  buckets: ExportedBucket[];
+  tasks: ExportedTask[];
+  completions: ExportedCompletion[];
+}
+
+export interface ImportResult {
+  buckets: { imported: number; skipped: number };
+  tasks: { imported: number; skipped: number };
+  completions: { imported: number; skipped: number };
+}
