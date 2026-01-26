@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { TaskParser, ChurnParsedTask } from '@kevjava/task-parser';
 import { getContext } from '../context';
 import {
   formatTaskTable,
@@ -8,7 +9,7 @@ import {
   formatDate,
   formatDuration,
 } from '../format';
-import { TaskStatus, CurveType, CreateTaskInput } from '../../core';
+import { TaskStatus, CurveType, CreateTaskInput, RecurrencePattern, RecurrenceMode, RecurrenceType } from '../../core';
 
 export function registerTaskCommands(program: Command): void {
   const task = program
@@ -220,7 +221,21 @@ async function createTask(
       verbose: globalOpts.verbose,
     });
 
-    const input = parseTaskDescription(description, options);
+    const { input, bucketName } = parseTaskDescription(description, options);
+
+    // Look up bucket by name if specified
+    if (bucketName) {
+      const buckets = await ctx.buckets.list();
+      const bucket = buckets.find(
+        (b) => b.name.toLowerCase() === bucketName.toLowerCase()
+      );
+      if (bucket) {
+        input.bucket_id = bucket.id;
+      } else {
+        console.log(`Warning: Bucket "${bucketName}" not found, ignoring.`);
+      }
+    }
+
     const task = await ctx.tasks.create(input);
 
     success(`Created task #${task.id}: ${task.title}`);
@@ -230,6 +245,7 @@ async function createTask(
       if (task.tags.length > 0) console.log(`  Tags: ${task.tags.join(', ')}`);
       if (task.deadline) console.log(`  Deadline: ${formatDate(task.deadline)}`);
       if (task.estimate_minutes) console.log(`  Estimate: ${formatDuration(task.estimate_minutes)}`);
+      if (task.bucket_id) console.log(`  Bucket: ${bucketName}`);
       console.log(`  Curve: ${task.curve_config.type}`);
     }
   } catch (err) {
@@ -501,90 +517,63 @@ async function searchTasks(
   }
 }
 
-// Simple task description parser (basic implementation)
+// Result from parsing task description
+interface ParsedTaskInput {
+  input: CreateTaskInput;
+  bucketName?: string; // Needs lookup by name
+}
+
+// Parse task description using task-parser library
 function parseTaskDescription(
   description: string,
   options: { curve?: string; exponent?: number }
-): CreateTaskInput {
-  const tokens = description.trim().split(/\s+/);
+): ParsedTaskInput {
+  const parsed = TaskParser.parseChurn(description);
+
   const input: CreateTaskInput = {
-    title: '',
-    tags: [],
+    title: parsed.title,
+    tags: parsed.tags,
   };
-
-  const titleTokens: string[] = [];
-
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
-
-    // Date at start
-    if (i === 0 && /^\d{4}-\d{2}-\d{2}$/.test(token)) {
-      input.deadline = new Date(token + 'T00:00:00');
-      continue;
-    }
-
-    // Relative dates
-    if (i === 0 && ['today', 'tomorrow'].includes(token.toLowerCase())) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (token.toLowerCase() === 'tomorrow') {
-        today.setDate(today.getDate() + 1);
-      }
-      input.deadline = today;
-      continue;
-    }
-
-    // Project
-    if (token.startsWith('@')) {
-      input.project = token.slice(1);
-      continue;
-    }
-
-    // Tag
-    if (token.startsWith('+')) {
-      input.tags!.push(token.slice(1));
-      continue;
-    }
-
-    // Duration
-    if (token.startsWith('~')) {
-      input.estimate_minutes = parseDuration(token.slice(1));
-      continue;
-    }
-
-    // Bucket
-    if (token.startsWith('^')) {
-      // Would need to look up bucket by name
-      continue;
-    }
-
-    // Dependencies
-    if (token.startsWith('after:')) {
-      const depIds = token.slice(6).split(',').map((s) => parseInt(s.trim(), 10));
-      input.dependencies = depIds.filter((n) => !isNaN(n));
-      continue;
-    }
-
-    // Time window
-    if (token.startsWith('window:')) {
-      const window = token.slice(7);
-      const [start, end] = window.split('-');
-      input.window_start = start;
-      input.window_end = end;
-      continue;
-    }
-
-    // Title token
-    titleTokens.push(token);
-  }
-
-  input.title = titleTokens.join(' ');
 
   if (!input.title) {
     throw new Error('Task title is required');
   }
 
-  // Apply curve options
+  // Map parsed fields to CreateTaskInput
+  if (parsed.project) {
+    input.project = parsed.project;
+  }
+
+  if (parsed.date) {
+    input.deadline = parsed.date;
+  }
+
+  if (parsed.duration) {
+    input.estimate_minutes = parsed.duration;
+  }
+
+  if (parsed.dependencies && parsed.dependencies.length > 0) {
+    input.dependencies = parsed.dependencies;
+  }
+
+  if (parsed.window) {
+    input.window_start = parsed.window.start;
+    input.window_end = parsed.window.end;
+  }
+
+  if (parsed.recurrence) {
+    // Map task-parser RecurrencePattern to churn RecurrencePattern
+    input.recurrence_pattern = {
+      mode: parsed.recurrence.mode as RecurrenceMode,
+      type: parsed.recurrence.type as RecurrenceType,
+      interval: parsed.recurrence.interval,
+      unit: parsed.recurrence.unit,
+      dayOfWeek: parsed.recurrence.dayOfWeek,
+      anchor: parsed.recurrence.anchor,
+    };
+  }
+
+  // Apply curve options from CLI flags
   if (options.curve) {
     input.curve_config = {
       type: options.curve as CurveType,
@@ -594,7 +583,10 @@ function parseTaskDescription(
     }
   }
 
-  return input;
+  return {
+    input,
+    bucketName: parsed.bucket,
+  };
 }
 
 function parseDate(input: string): Date {
