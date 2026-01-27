@@ -80,7 +80,7 @@ async function createBucket(
 }
 
 async function listBuckets(
-  globalOpts: { verbose?: boolean; config?: string; db?: string }
+  globalOpts: { verbose?: boolean; json?: boolean; config?: string; db?: string }
 ): Promise<void> {
   try {
     const ctx = await getContext({
@@ -99,7 +99,14 @@ async function listBuckets(
       })
     );
 
-    console.log(formatBucketTable(bucketsWithCounts));
+    if (globalOpts.json) {
+      console.log(JSON.stringify(bucketsWithCounts.map(b => ({
+        ...b.bucket,
+        taskCount: b.taskCount,
+      })), null, 2));
+    } else {
+      console.log(formatBucketTable(bucketsWithCounts));
+    }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err));
     process.exit(1);
@@ -108,7 +115,7 @@ async function listBuckets(
 
 async function showBucket(
   idOrName: string,
-  globalOpts: { verbose?: boolean; config?: string; db?: string }
+  globalOpts: { verbose?: boolean; json?: boolean; config?: string; db?: string }
 ): Promise<void> {
   try {
     const ctx = await getContext({
@@ -133,6 +140,14 @@ async function showBucket(
     }
 
     const tasks = await ctx.buckets.getTasks(bucket.id);
+
+    if (globalOpts.json) {
+      console.log(JSON.stringify({
+        ...bucket,
+        tasks: tasks.map(t => ({ id: t.id, title: t.title, status: t.status })),
+      }, null, 2));
+      return;
+    }
 
     console.log(`Bucket #${bucket.id}: ${bucket.name}`);
     console.log(`Type: ${bucket.type}`);

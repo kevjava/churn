@@ -265,7 +265,7 @@ async function listTasks(
     overdue?: boolean;
     recurring?: boolean;
   },
-  globalOpts: { verbose?: boolean; config?: string; db?: string }
+  globalOpts: { verbose?: boolean; json?: boolean; config?: string; db?: string }
 ): Promise<void> {
   try {
     const ctx = await getContext({
@@ -274,9 +274,9 @@ async function listTasks(
       verbose: globalOpts.verbose,
     });
 
+    let tasks;
     if (options.priority) {
-      const tasks = await ctx.tasks.getByPriority(options.limit);
-      console.log(formatTaskTable(tasks, true));
+      tasks = await ctx.tasks.getByPriority(options.limit);
     } else {
       const filter: {
         status?: TaskStatus;
@@ -303,13 +303,17 @@ async function listTasks(
         filter.has_recurrence = true;
       }
 
-      let tasks = await ctx.tasks.list(filter);
+      tasks = await ctx.tasks.list(filter);
 
       if (options.limit && tasks.length > options.limit) {
         tasks = tasks.slice(0, options.limit);
       }
+    }
 
-      console.log(formatTaskTable(tasks, false));
+    if (globalOpts.json) {
+      console.log(JSON.stringify(tasks, null, 2));
+    } else {
+      console.log(formatTaskTable(tasks, options.priority ?? false));
     }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err));
@@ -319,7 +323,7 @@ async function listTasks(
 
 async function showTask(
   id: number,
-  globalOpts: { verbose?: boolean; config?: string; db?: string }
+  globalOpts: { verbose?: boolean; json?: boolean; config?: string; db?: string }
 ): Promise<void> {
   try {
     const ctx = await getContext({
@@ -338,7 +342,16 @@ async function showTask(
     const deps = await ctx.tasks.getDependencies(id);
     const dependents = await ctx.tasks.getDependents(id);
 
-    console.log(formatTaskDetail(task, priority, deps, dependents));
+    if (globalOpts.json) {
+      console.log(JSON.stringify({
+        ...task,
+        priority,
+        dependencies: deps.map(d => ({ id: d.id, title: d.title })),
+        dependents: dependents.map(d => ({ id: d.id, title: d.title })),
+      }, null, 2));
+    } else {
+      console.log(formatTaskDetail(task, priority, deps, dependents));
+    }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err));
     process.exit(1);

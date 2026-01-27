@@ -18,6 +18,7 @@ program
   .description('Time-decay-based task management with priority curves')
   .version('0.1.0')
   .option('-v, --verbose', 'Enable verbose output')
+  .option('--json', 'Output in JSON format')
   .option('--config <path>', 'Use alternate config file')
   .option('--db <path>', 'Use alternate database');
 

@@ -234,6 +234,12 @@ churn ls --project backend --tag urgent --priority
 # Verbose output
 churn -v create "New task"
 
+# JSON output (for scripting)
+churn --json ls
+churn --json show 42
+churn --json pri
+churn --json timeline 42
+
 # Use alternate database
 churn --db /path/to/other.db ls
 

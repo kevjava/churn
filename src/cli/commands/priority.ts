@@ -27,7 +27,7 @@ export function registerPriorityCommand(program: Command): void {
 
 async function showPriority(
   options: { limit?: number; at?: string },
-  globalOpts: { verbose?: boolean; config?: string; db?: string }
+  globalOpts: { verbose?: boolean; json?: boolean; config?: string; db?: string }
 ): Promise<void> {
   try {
     const ctx = await getContext({
@@ -38,6 +38,11 @@ async function showPriority(
 
     const datetime = options.at ? new Date(options.at) : new Date();
     const tasks = await ctx.tasks.getByPriority(options.limit ?? 10, datetime);
+
+    if (globalOpts.json) {
+      console.log(JSON.stringify(tasks, null, 2));
+      return;
+    }
 
     if (tasks.length === 0) {
       console.log('No open tasks.');
@@ -82,7 +87,7 @@ async function showPriority(
 async function showTimeline(
   id: number,
   options: { from?: string; to?: string },
-  globalOpts: { verbose?: boolean; config?: string; db?: string }
+  globalOpts: { verbose?: boolean; json?: boolean; config?: string; db?: string }
 ): Promise<void> {
   try {
     const ctx = await getContext({
@@ -113,15 +118,12 @@ async function showTimeline(
       toDate = new Date(now.getTime() + 14 * 86400000); // 2 weeks
     }
 
-    console.log(`Priority timeline for Task #${task.id}: ${task.title}`);
-    console.log('');
-    console.log('Date         Time    Priority  Status');
-    console.log('----------   -----   --------  --------');
-
     // Generate timeline points
     const msPerDay = 86400000;
     const totalDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / msPerDay);
     const step = Math.max(1, Math.floor(totalDays / 10)); // ~10 points
+
+    const points: { date: string; time: string; priority: number; status: string }[] = [];
 
     for (let d = new Date(fromDate); d <= toDate; d = new Date(d.getTime() + step * msPerDay)) {
       const checkTime = new Date(d);
@@ -129,14 +131,36 @@ async function showTimeline(
 
       const priority = await ctx.tasks.calculatePriority(id, checkTime);
       const status = getStatusLabel(priority);
-      const color = priorityColor(priority);
-      const reset = resetColor();
-
       const dateStr = checkTime.toISOString().split('T')[0];
-      const timeStr = '09:00';
 
+      points.push({
+        date: dateStr,
+        time: '09:00',
+        priority,
+        status,
+      });
+    }
+
+    if (globalOpts.json) {
+      console.log(JSON.stringify({
+        task: { id: task.id, title: task.title },
+        from: fromDate.toISOString().split('T')[0],
+        to: toDate.toISOString().split('T')[0],
+        points,
+      }, null, 2));
+      return;
+    }
+
+    console.log(`Priority timeline for Task #${task.id}: ${task.title}`);
+    console.log('');
+    console.log('Date         Time    Priority  Status');
+    console.log('----------   -----   --------  --------');
+
+    for (const point of points) {
+      const color = priorityColor(point.priority);
+      const reset = resetColor();
       console.log(
-        `${dateStr}   ${timeStr}   ${color}${formatPriority(priority).padStart(8)}${reset}  ${status}`
+        `${point.date}   ${point.time}   ${color}${formatPriority(point.priority).padStart(8)}${reset}  ${point.status}`
       );
     }
   } catch (err) {
