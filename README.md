@@ -168,11 +168,14 @@ Fixed schedule, happens whether you completed it or not:
 
 ```bash
 churn create "every monday Team meeting @work ~1h"
+churn create "every monday 16:00 Standup @work ~30m"
 churn create "every 2w Sprint planning @work ~2h"
-churn create "daily Check email @work ~15m"
+churn create "daily 09:00 Check email @work ~15m"
 churn create "weekly Review goals @personal ~30m"
 churn create "monthly Pay rent @personal ~5m"
 ```
+
+You can add a time (HH:MM format) after the recurrence pattern to specify when the task is due.
 
 ### Completion Mode (`after`)
 

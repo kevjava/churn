@@ -1,28 +1,8 @@
 # Churn TODO
 
-## Next Up
+## Completed
 
-### Add time-of-day support to recurrence patterns
-
-**Location:** task-parser library (`../task-parser`)
-
-**Current syntax:**
-```
-every monday Team standup
-daily Check dashboards
-```
-
-**Proposed syntax:**
-```
-every monday 16:00 Team standup    # Due at 4pm every Monday
-daily 09:00 Check dashboards       # Due at 9am every day
-```
-
-**Changes needed:**
-1. Update task-parser recurrence parser to recognize time after weekday/interval
-2. Add `time` field to `RecurrencePattern` interface
-3. Update churn to use recurrence time when calculating `next_due_at`
-4. Update README with new syntax
+- [x] Add time-of-day support to recurrence patterns (`every monday 16:00`, `daily 09:00`)
 
 ---
 
