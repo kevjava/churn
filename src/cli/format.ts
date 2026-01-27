@@ -239,19 +239,21 @@ function formatRecurrence(task: Task): string {
   const pattern = task.recurrence_pattern;
   if (!pattern) return 'none';
 
+  const timeSuffix = pattern.timeOfDay ? ` at ${pattern.timeOfDay}` : '';
+
   if (pattern.mode === 'calendar') {
-    if (pattern.type === 'daily') return 'daily';
+    if (pattern.type === 'daily') return `daily${timeSuffix}`;
     if (pattern.type === 'weekly' && pattern.dayOfWeek !== undefined) {
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-      return `every ${days[pattern.dayOfWeek]}`;
+      return `every ${days[pattern.dayOfWeek]}${timeSuffix}`;
     }
-    if (pattern.type === 'monthly') return 'monthly';
+    if (pattern.type === 'monthly') return `monthly${timeSuffix}`;
     if (pattern.type === 'interval' && pattern.interval && pattern.unit) {
-      return `every ${pattern.interval} ${pattern.unit}`;
+      return `every ${pattern.interval} ${pattern.unit}${timeSuffix}`;
     }
   } else {
     if (pattern.type === 'interval' && pattern.interval && pattern.unit) {
-      return `after ${pattern.interval} ${pattern.unit}`;
+      return `after ${pattern.interval} ${pattern.unit}${timeSuffix}`;
     }
   }
 

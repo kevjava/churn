@@ -35,6 +35,7 @@ export interface RecurrencePattern {
   interval?: number;
   unit?: 'days' | 'weeks' | 'months';
   dayOfWeek?: number; // 0-6 (0 = Sunday)
+  timeOfDay?: string; // HH:MM format (e.g., "16:00")
   anchor?: Date;
 }
 

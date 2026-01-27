@@ -569,6 +569,7 @@ function parseTaskDescription(
       interval: parsed.recurrence.interval,
       unit: parsed.recurrence.unit,
       dayOfWeek: parsed.recurrence.dayOfWeek,
+      timeOfDay: parsed.recurrence.timeOfDay,
       anchor: parsed.recurrence.anchor,
     };
   }
