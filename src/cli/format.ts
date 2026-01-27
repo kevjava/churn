@@ -240,11 +240,23 @@ function formatRecurrence(task: Task): string {
   if (!pattern) return 'none';
 
   const timeSuffix = pattern.timeOfDay ? ` at ${pattern.timeOfDay}` : '';
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const daysShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   if (pattern.mode === 'calendar') {
     if (pattern.type === 'daily') return `daily${timeSuffix}`;
+    if (pattern.type === 'weekly' && pattern.daysOfWeek && pattern.daysOfWeek.length > 0) {
+      // Check if it's weekdays (Mon-Fri)
+      const isWeekdays = pattern.daysOfWeek.length === 5 &&
+        [1, 2, 3, 4, 5].every(d => pattern.daysOfWeek!.includes(d));
+      if (isWeekdays) {
+        return `weekdays${timeSuffix}`;
+      }
+      // Format as comma-separated short names
+      const dayNames = pattern.daysOfWeek.map(d => daysShort[d]).join(',');
+      return `${dayNames}${timeSuffix}`;
+    }
     if (pattern.type === 'weekly' && pattern.dayOfWeek !== undefined) {
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       return `every ${days[pattern.dayOfWeek]}${timeSuffix}`;
     }
     if (pattern.type === 'monthly') return `monthly${timeSuffix}`;

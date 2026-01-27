@@ -582,6 +582,7 @@ function parseTaskDescription(
       interval: parsed.recurrence.interval,
       unit: parsed.recurrence.unit,
       dayOfWeek: parsed.recurrence.dayOfWeek,
+      daysOfWeek: parsed.recurrence.daysOfWeek,
       timeOfDay: parsed.recurrence.timeOfDay,
       anchor: parsed.recurrence.anchor,
     };

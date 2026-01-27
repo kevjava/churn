@@ -34,7 +34,8 @@ export interface RecurrencePattern {
   type: RecurrenceType;
   interval?: number;
   unit?: 'days' | 'weeks' | 'months';
-  dayOfWeek?: number; // 0-6 (0 = Sunday)
+  dayOfWeek?: number; // 0-6 (0 = Sunday) - single day
+  daysOfWeek?: number[]; // 0-6 array - multiple days (e.g., [1,2,4] for Mon,Tue,Thu)
   timeOfDay?: string; // HH:MM format (e.g., "16:00")
   anchor?: Date;
 }

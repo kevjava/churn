@@ -8,7 +8,16 @@
 
 ---
 
+## Next
+
+- [x] Ensure we have complex custom repetition patterns like:
+
+  ```churn
+  weekdays 07:00 Read email @admin ~15m
+  Mon,Tue,Thu 09:30 Standup @projectA +meeting ~15m
+  ```
+
 ## Backlog
 
-- [ ] Phase 2: Daily planning workflow
+- [x] Phase 2: Daily planning workflow (`churn plan` / `churn today`)
 - [ ] Phase 2: tt-time-tracker integration

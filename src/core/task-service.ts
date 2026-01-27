@@ -305,8 +305,22 @@ export class TaskService implements DependencyChecker {
         next.setDate(next.getDate() + 1);
         next.setHours(0, 0, 0, 0);
         return next;
+      } else if (pattern.type === 'weekly' && pattern.daysOfWeek && pattern.daysOfWeek.length > 0) {
+        // Next occurrence of any of the specified weekdays
+        const next = new Date(now);
+        next.setDate(next.getDate() + 1); // Start from tomorrow
+        next.setHours(0, 0, 0, 0);
+
+        // Find the next day that's in daysOfWeek (max 7 iterations)
+        for (let i = 0; i < 7; i++) {
+          if (pattern.daysOfWeek.includes(next.getDay())) {
+            return next;
+          }
+          next.setDate(next.getDate() + 1);
+        }
+        return next; // Should never reach here
       } else if (pattern.type === 'weekly' && pattern.dayOfWeek !== undefined) {
-        // Next occurrence of weekday
+        // Next occurrence of single weekday
         const next = new Date(now);
         const currentDay = next.getDay();
         let daysUntil = pattern.dayOfWeek - currentDay;
