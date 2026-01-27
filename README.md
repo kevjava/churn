@@ -110,6 +110,20 @@ churn pri --limit 20
 churn pri --at "2025-02-01 09:00"
 ```
 
+### Timeline
+
+Show how a task's priority changes over time:
+
+```bash
+# Show priority timeline for a task
+churn timeline 42
+
+# Specify date range
+churn timeline 42 --from 2025-01-01 --to 2025-02-01
+```
+
+Output shows date, priority value, and status (Inactive → Low → Medium → High → Due now → Overdue).
+
 ### Buckets
 
 Buckets are containers for time allocation (e.g., "ProjectA gets 20 hours/week").
