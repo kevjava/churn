@@ -67,3 +67,23 @@ When modifying task parsing syntax, changes are needed in the task-parser repo f
 - Tasks with `window_start`/`window_end` have zero priority outside those hours
 - Blocked tasks (with incomplete dependencies) have zero priority
 - Recurring tasks use `next_due_at` for scheduling, `last_completed_at` for accumulator curves
+
+## Commit Convention
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+Format: `<type>[optional scope]: <description>`
+
+Types:
+- `feat`: New feature (correlates with MINOR in semver)
+- `fix`: Bug fix (correlates with PATCH in semver)
+- `docs`: Documentation only
+- `style`: Code style (formatting, semicolons, etc.)
+- `refactor`: Code change that neither fixes a bug nor adds a feature
+- `perf`: Performance improvement
+- `test`: Adding or correcting tests
+- `chore`: Maintenance tasks
+- `build`: Build system or external dependencies
+- `ci`: CI configuration
+
+Breaking changes: Add `!` before the colon (e.g., `feat!: remove deprecated API`) or include `BREAKING CHANGE:` in the footer.
