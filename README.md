@@ -40,7 +40,7 @@ churn done 1
 Tasks are created using a simple grammar:
 
 ```
-[date] <title> [@project] [+tag...] [~duration] [$bucket] [recurrence] [window:HH:MM-HH:MM] [after:id,id]
+[date] <title> [@project] [+tag...] [~duration] [%bucket] [recurrence] [window:HH:MM-HH:MM] [after:id,id]
 ```
 
 ### Components
@@ -52,7 +52,7 @@ Tasks are created using a simple grammar:
 | Project | `@backend` | Project association |
 | Tags | `+urgent +bug` | One or more tags |
 | Duration | `~2h`, `~30m`, `~1h30m` | Time estimate |
-| Bucket | `$ProjectA` | Time allocation bucket |
+| Bucket | `%ProjectA` | Time allocation bucket |
 | Recurrence | `daily`, `weekly`, `every monday`, `every 2w`, `after 2w` | Recurring schedule |
 | Window | `window:09:00-17:00` | Time window when task is active |
 | Dependencies | `after:1,2` | Task IDs that must complete first |
@@ -79,7 +79,7 @@ churn create "after 2w Get haircut @personal ~1h"
 churn create "Deploy to production @backend +release ~1h after:42,43"
 
 # Task in a bucket
-churn create "Review design docs @frontend +design ~1h \$ProjectA"
+churn create "Review design docs @frontend +design ~1h %ProjectA"
 ```
 
 ## Commands

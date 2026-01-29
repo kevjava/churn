@@ -31,7 +31,7 @@ metadata = project | tag | duration | bucket | window | dependencies
 project = "@" identifier
 tag = "+" identifier  
 duration = "~" time_amount
-bucket = "^" identifier
+bucket = "%" identifier
 window = "window:" time "-" time
 dependencies = "after:" task_id_list
 
@@ -129,14 +129,14 @@ Formats:
 
 ### Bucket (Optional)
 
-Prefix: `^`
+Prefix: `%`
 
 Assigns task to a time allocation bucket (context/category for scheduling).
 
 Examples:
-- `^ProjectA`
-- `^Admin`
-- `^Training`
+- `%ProjectA`
+- `%Admin`
+- `%Training`
 
 ### Time Window (Optional)
 
@@ -173,7 +173,7 @@ Review presentation
 ### With metadata
 ```
 2025-01-10 Deploy Relay @relay +deployment +urgent ~2h
-tomorrow Fix Docker networking @relay +bug ~30m ^ProjectA
+tomorrow Fix Docker networking @relay +bug ~30m %ProjectA
 Review Q4 presentation @work +review ~1h
 ```
 
@@ -195,7 +195,7 @@ after 30d Change HVAC filter @home +maintenance ~10m
 
 ### Complex examples
 ```
-every friday Project A standup @projectA +meeting ~30m window:14:00-15:00 ^ProjectA
+every friday Project A standup @projectA +meeting ~30m window:14:00-15:00 %ProjectA
 after 3m Dental checkup @health +appointment ~1h
 2025-01-15 Finalize architecture doc @relay +documentation ~3h after:150,151,152
 ```
@@ -220,7 +220,7 @@ after 3m Dental checkup @health +appointment ~1h
    - `@` → project
    - `+` → tag (append to list)
    - `~` → duration
-   - `^` → bucket
+   - `%` → bucket
    - `window:` → time window
    - `after:` → dependencies
 
@@ -286,7 +286,7 @@ Both tools understand:
 ### churn-only Syntax
 tt ignores but doesn't error on:
 - Recurrence (`every`, `after`)
-- Buckets (`^bucket`)
+- Buckets (`%bucket`)
 - Time windows (`window:`)
 - Dependencies (`after:`)
 - Dates (tt uses current time)
@@ -350,7 +350,7 @@ function formatTask(task: Task): string {
   
   // Bucket
   if (task.bucket) {
-    parts.push(`^${task.bucket}`);
+    parts.push(`%${task.bucket}`);
   }
   
   // Window
@@ -414,7 +414,7 @@ daily <title>
 after 2w <title>
 
 # Advanced
-every friday <title> @project +tag ~duration ^bucket window:HH:MM-HH:MM
+every friday <title> @project +tag ~duration %bucket window:HH:MM-HH:MM
 <date> <title> after:ID,ID
 ```
 

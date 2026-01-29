@@ -149,12 +149,12 @@ Tasks don't have static priorities. Instead, each task has a **priority curve** 
 ### Task Grammar
 Common language shared with tt-time-tracker:
 ```
-<date> <title> [@project] [+tag...] [~duration] [^bucket] [recurrence] [window] [after:deps]
+<date> <title> [@project] [+tag...] [~duration] [%bucket] [recurrence] [window] [after:deps]
 ```
 
 Example:
 ```
-2025-01-10 Deploy Relay @relay +deployment +urgent ~2h ^ProjectA
+2025-01-10 Deploy Relay @relay +deployment +urgent ~2h %ProjectA
 every monday Take out trash +chore ~5m window:18:00-08:00
 after 2w Get haircut @personal ~1h
 ```

@@ -51,7 +51,7 @@ churn create <description>  # Shortcut
 churn create 2025-01-10 Deploy Relay @relay +deployment ~2h
 churn create every monday Take out trash +chore ~5m window:18:00-08:00
 churn create after 2w Get haircut @personal ~1h
-churn create Fix bug @relay +bug ~30m ^ProjectA after:143
+churn create Fix bug @relay +bug ~30m %ProjectA after:143
 ```
 
 **Options:**
