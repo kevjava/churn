@@ -10,7 +10,7 @@ import {
   padLeft,
   truncate,
 } from '../format';
-import { DailyPlanner, DailyPlan, ScheduledTask, PlannerConfig } from '../../core/planner';
+import { DailyPlanner, DailyPlan, ScheduledTask, PlannerConfig } from '@kevjava/churn-core';
 
 export function registerPlanCommands(program: Command): void {
   program

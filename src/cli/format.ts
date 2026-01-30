@@ -1,8 +1,4 @@
-import { Task, Bucket, TaskStatus } from '../core';
-
-export interface TaskWithPriority extends Task {
-  priority: number;
-}
+import { Task, Bucket, TaskStatus, TaskWithPriority } from '@kevjava/churn-core';
 
 export function formatDate(date: Date | undefined): string {
   if (!date) return '-';
