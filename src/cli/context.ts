@@ -1,4 +1,4 @@
-import { Database, TaskService, BucketService } from '../core';
+import { Database, TaskService, BucketService } from '@kevjava/churn-core';
 import {
   ChurnConfig,
   loadConfig,

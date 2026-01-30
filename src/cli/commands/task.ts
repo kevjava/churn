@@ -9,7 +9,7 @@ import {
   formatDate,
   formatDuration,
 } from '../format';
-import { TaskStatus, CurveType, CreateTaskInput, RecurrencePattern, RecurrenceMode, RecurrenceType } from '../../core';
+import { TaskStatus, CurveType, CreateTaskInput, RecurrencePattern, RecurrenceMode, RecurrenceType } from '@kevjava/churn-core';
 
 export function registerTaskCommands(program: Command): void {
   const task = program

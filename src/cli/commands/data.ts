@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import { Command } from 'commander';
 import { getContext } from '../context';
 import { success, error } from '../format';
-import { ExportData } from '../../core';
+import { ExportData } from '@kevjava/churn-core';
 
 export function registerDataCommands(program: Command): void {
   // export command

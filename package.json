@@ -15,10 +15,17 @@
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["task", "todo", "priority", "time-management", "cli"],
+  "keywords": [
+    "task",
+    "todo",
+    "priority",
+    "time-management",
+    "cli"
+  ],
   "author": "Kevin",
   "license": "MIT",
   "dependencies": {
+    "@kevjava/churn-core": "file:../churn-core",
     "@kevjava/task-parser": "file:../task-parser",
     "better-sqlite3": "^11.0.0",
     "commander": "^12.0.0"
