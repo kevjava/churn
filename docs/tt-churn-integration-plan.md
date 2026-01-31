@@ -1,5 +1,11 @@
 # tt-time-tracker + churn Integration Plan
 
+> **Status: Complete** (January 2026)
+>
+> This integration has been implemented. The core logic has been extracted to
+> `@kevjava/churn-core` and integrated with tt-time-tracker via the TaskScheduler
+> interface.
+
 ## Architecture Overview
 
 Extract service layers into separate core libraries with a shared interface:

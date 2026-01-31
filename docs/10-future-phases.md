@@ -6,7 +6,7 @@ Features deferred beyond Phase 1 MVP, roughly organized by phase.
 
 ## Phase 2: Usability & Integration
 
-### Daily Planning Workflow
+### Daily Planning Workflow ✅
 
 **Goal:** Morning ritual to review and organize the day.
 
@@ -42,7 +42,7 @@ churn plan today
 - Saved filters
 - Smart filters: "overdue and high priority"
 
-### tt-time-tracker Integration
+### tt-time-tracker Integration ✅
 
 **Features:**
 - `tt start churn:143` - fetch task metadata
