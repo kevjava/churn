@@ -16,7 +16,7 @@ export function registerTaskCommands(program: Command): void {
     .command('task')
     .description('Task management commands');
 
-  // task create
+  // task create / task add
   task
     .command('create <description...>')
     .description('Create a new task')
@@ -26,9 +26,27 @@ export function registerTaskCommands(program: Command): void {
       await createTask(descriptionParts.join(' '), options, program.opts());
     });
 
-  // Shortcut: churn create
+  task
+    .command('add <description...>')
+    .description('Create a new task (synonym for create)')
+    .option('--curve <type>', 'Override curve type (linear, exponential)')
+    .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
+    .action(async (descriptionParts: string[], options) => {
+      await createTask(descriptionParts.join(' '), options, program.opts());
+    });
+
+  // Shortcuts: churn create, churn add
   program
     .command('create <description...>')
+    .description('Create a new task (shortcut for task create)')
+    .option('--curve <type>', 'Override curve type')
+    .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
+    .action(async (descriptionParts: string[], options) => {
+      await createTask(descriptionParts.join(' '), options, program.opts());
+    });
+
+  program
+    .command('add <description...>')
     .description('Create a new task (shortcut for task create)')
     .option('--curve <type>', 'Override curve type')
     .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
@@ -91,7 +109,7 @@ export function registerTaskCommands(program: Command): void {
       await showTask(parseInt(id, 10), program.opts());
     });
 
-  // task update
+  // task update / task edit
   task
     .command('update <id>')
     .description('Update a task')
@@ -106,10 +124,37 @@ export function registerTaskCommands(program: Command): void {
       await updateTask(parseInt(id, 10), options, program.opts());
     });
 
-  // Shortcut: churn update
+  task
+    .command('edit <id>')
+    .description('Update a task (synonym for update)')
+    .option('--title <text>', 'New title')
+    .option('--deadline <date>', 'New deadline')
+    .option('--project <name>', 'Change project')
+    .option('--add-tag <tag>', 'Add tag', collect, [])
+    .option('--remove-tag <tag>', 'Remove tag', collect, [])
+    .option('--estimate <duration>', 'New estimate')
+    .option('--bucket <id>', 'Change bucket', parseInt)
+    .action(async (id: string, options) => {
+      await updateTask(parseInt(id, 10), options, program.opts());
+    });
+
+  // Shortcuts: churn update, churn edit
   program
     .command('update <id>')
     .description('Update a task (shortcut)')
+    .option('--title <text>', 'New title')
+    .option('--deadline <date>', 'New deadline')
+    .option('--project <name>', 'Change project')
+    .option('--add-tag <tag>', 'Add tag', collect, [])
+    .option('--remove-tag <tag>', 'Remove tag', collect, [])
+    .option('--estimate <duration>', 'New estimate')
+    .action(async (id: string, options) => {
+      await updateTask(parseInt(id, 10), options, program.opts());
+    });
+
+  program
+    .command('edit <id>')
+    .description('Update a task (shortcut for task update)')
     .option('--title <text>', 'New title')
     .option('--deadline <date>', 'New deadline')
     .option('--project <name>', 'Change project')
