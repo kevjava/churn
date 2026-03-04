@@ -313,7 +313,9 @@ async function listTasks(
     if (globalOpts.json) {
       console.log(JSON.stringify(tasks, null, 2));
     } else {
-      console.log(formatTaskTable(tasks, options.priority ?? false));
+      const buckets = await ctx.buckets.list();
+      const bucketMap = new Map(buckets.map(b => [b.id, b.name]));
+      console.log(formatTaskTable(tasks, options.priority ?? false, bucketMap));
     }
   } catch (err) {
     error(err instanceof Error ? err.message : String(err));
@@ -523,7 +525,9 @@ async function searchTasks(
     });
 
     const tasks = await ctx.tasks.search(query);
-    console.log(formatTaskTable(tasks, false));
+    const buckets = await ctx.buckets.list();
+    const bucketMap = new Map(buckets.map(b => [b.id, b.name]));
+    console.log(formatTaskTable(tasks, false, bucketMap));
   } catch (err) {
     error(err instanceof Error ? err.message : String(err));
     process.exit(1);
