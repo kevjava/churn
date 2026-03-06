@@ -108,12 +108,12 @@ async function showTimeline(
     fromDate.setHours(0, 0, 0, 0);
 
     let toDate: Date;
+    const effectiveDeadline = task.deadline || task.next_due_at || task.curve_config.deadline;
+
     if (options.to) {
       toDate = new Date(options.to);
-    } else if (task.deadline) {
-      toDate = new Date(task.deadline.getTime() + 3 * 86400000); // deadline + 3 days
-    } else if (task.curve_config.deadline) {
-      toDate = new Date(task.curve_config.deadline.getTime() + 3 * 86400000);
+    } else if (effectiveDeadline) {
+      toDate = new Date(effectiveDeadline.getTime() + 3 * 86400000); // effectiveDeadline + 3 days
     } else {
       toDate = new Date(now.getTime() + 14 * 86400000); // 2 weeks
     }
