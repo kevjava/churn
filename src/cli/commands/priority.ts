@@ -107,19 +107,19 @@ async function showTimeline(
     let fromDate = options.from ? new Date(options.from) : new Date(now);
     fromDate.setHours(0, 0, 0, 0);
 
+    const msPerDay = 86400000;
     let toDate: Date;
     const effectiveDeadline = task.deadline || task.next_due_at || task.curve_config.deadline;
 
     if (options.to) {
       toDate = new Date(options.to);
     } else if (effectiveDeadline) {
-      toDate = new Date(effectiveDeadline.getTime() + 3 * 86400000); // effectiveDeadline + 3 days
+      toDate = new Date(effectiveDeadline.getTime() + 3 * msPerDay); // effectiveDeadline + 3 days
     } else {
-      toDate = new Date(now.getTime() + 14 * 86400000); // 2 weeks
+      toDate = new Date(now.getTime() + 14 * msPerDay); // 2 weeks
     }
 
     // Generate timeline points
-    const msPerDay = 86400000;
     const totalDays = Math.ceil((toDate.getTime() - fromDate.getTime()) / msPerDay);
     const step = Math.max(1, Math.floor(totalDays / 10)); // ~10 points
 
