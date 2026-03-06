@@ -48,7 +48,7 @@ export function registerTaskCommands(program: Command): void {
   program
     .command('add <description...>')
     .description('Create a new task (shortcut for task create)')
-    .option('--curve <type>', 'Override curve type')
+    .option('--curve <type>', 'Override curve type (linear, exponential)')
     .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
     .action(async (descriptionParts: string[], options) => {
       await createTask(descriptionParts.join(' '), options, program.opts());
