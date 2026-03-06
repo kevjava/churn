@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { TaskParser, ChurnParsedTask } from '@kevjava/task-parser';
-import { getContext } from '../context';
+import { getContext, CliContext } from '../context';
 import {
   formatTaskTable,
   formatTaskDetail,
@@ -254,6 +254,11 @@ async function createTask(
   }
 }
 
+async function getBucketMap(ctx: CliContext): Promise<Map<number, string>> {
+  const buckets = await ctx.buckets.list();
+  return new Map(buckets.map((b) => [b.id, b.name]));
+}
+
 async function listTasks(
   options: {
     status?: string;
@@ -313,8 +318,7 @@ async function listTasks(
     if (globalOpts.json) {
       console.log(JSON.stringify(tasks, null, 2));
     } else {
-      const buckets = await ctx.buckets.list();
-      const bucketMap = new Map(buckets.map(b => [b.id, b.name]));
+      const bucketMap = await getBucketMap(ctx);
       console.log(formatTaskTable(tasks, options.priority ?? false, bucketMap));
     }
   } catch (err) {
@@ -525,8 +529,7 @@ async function searchTasks(
     });
 
     const tasks = await ctx.tasks.search(query);
-    const buckets = await ctx.buckets.list();
-    const bucketMap = new Map(buckets.map(b => [b.id, b.name]));
+    const bucketMap = await getBucketMap(ctx);
     console.log(formatTaskTable(tasks, false, bucketMap));
   } catch (err) {
     error(err instanceof Error ? err.message : String(err));
