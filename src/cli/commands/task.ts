@@ -16,193 +16,124 @@ export function registerTaskCommands(program: Command): void {
     .command('task')
     .description('Task management commands');
 
-  // task create
-  task
-    .command('create <description...>')
-    .description('Create a new task')
-    .option('--curve <type>', 'Override curve type (linear, exponential)')
-    .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
-    .action(async (descriptionParts: string[], options) => {
-      await createTask(descriptionParts.join(' '), options, program.opts());
-    });
+  const configureCreateCommand = (cmd: Command) =>
+    cmd
+      .option('--curve <type>', 'Override curve type (linear, exponential)')
+      .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
+      .action(async (descriptionParts: string[], options) => {
+        await createTask(descriptionParts.join(' '), options, program.opts());
+      });
 
-  // Shortcut: churn create
-  program
-    .command('create <description...>')
-    .description('Create a new task (shortcut for task create)')
-    .option('--curve <type>', 'Override curve type')
-    .option('--exponent <n>', 'Set exponential curve exponent', parseFloat)
-    .action(async (descriptionParts: string[], options) => {
-      await createTask(descriptionParts.join(' '), options, program.opts());
-    });
+  const configureListCommand = (cmd: Command) =>
+    cmd
+      .option('--status <status>', 'Filter by status')
+      .option('--project <name>', 'Filter by project')
+      .option('--bucket <name>', 'Filter by bucket')
+      .option('--tag <tag>', 'Filter by tag', collect, [])
+      .option('--priority', 'Sort by priority')
+      .option('--limit <n>', 'Limit results', parseInt, 50)
+      .option('--overdue', 'Show only overdue tasks')
+      .option('--recurring', 'Show only recurring tasks')
+      .action(async (options) => {
+        await listTasks(options, program.opts());
+      });
+
+  // task create / task add
+  configureCreateCommand(task.command('create <description...>').description('Create a new task'));
+  configureCreateCommand(task.command('add <description...>').description('Create a new task (synonym for create)'));
+
+  // Shortcuts: churn create, churn add
+  configureCreateCommand(program.command('create <description...>').description('Create a new task (shortcut for task create)'));
+  configureCreateCommand(program.command('add <description...>').description('Create a new task (shortcut for task create)'));
 
   // task list
-  task
-    .command('list')
-    .description('List tasks')
-    .option('--status <status>', 'Filter by status')
-    .option('--project <name>', 'Filter by project')
-    .option('--bucket <name>', 'Filter by bucket')
-    .option('--tag <tag>', 'Filter by tag', collect, [])
-    .option('--priority', 'Sort by priority')
-    .option('--limit <n>', 'Limit results', parseInt, 50)
-    .option('--overdue', 'Show only overdue tasks')
-    .option('--recurring', 'Show only recurring tasks')
-    .action(async (options) => {
-      await listTasks(options, program.opts());
-    });
+  configureListCommand(task.command('list').description('List tasks'));
 
   // Shortcuts: churn list, churn ls
-  program
-    .command('list')
-    .description('List tasks (shortcut)')
-    .option('--status <status>', 'Filter by status')
-    .option('--project <name>', 'Filter by project')
-    .option('--priority', 'Sort by priority')
-    .option('--limit <n>', 'Limit results', parseInt, 50)
-    .action(async (options) => {
-      await listTasks(options, program.opts());
-    });
+  configureListCommand(program.command('list').description('List tasks (shortcut)'));
+  configureListCommand(program.command('ls').description('List tasks (shortcut)'));
 
-  program
-    .command('ls')
-    .description('List tasks (shortcut)')
-    .option('--status <status>', 'Filter by status')
-    .option('--project <name>', 'Filter by project')
-    .option('--priority', 'Sort by priority')
-    .option('--limit <n>', 'Limit results', parseInt, 50)
-    .action(async (options) => {
-      await listTasks(options, program.opts());
+  const configureShowCommand = (cmd: Command) =>
+    cmd.action(async (id: string) => {
+      await showTask(parseInt(id, 10), program.opts());
     });
 
   // task show
-  task
-    .command('show <id>')
-    .description('Show task details')
-    .action(async (id: string) => {
-      await showTask(parseInt(id, 10), program.opts());
-    });
+  configureShowCommand(task.command('show <id>').description('Show task details'));
 
   // Shortcut: churn show
-  program
-    .command('show <id>')
-    .description('Show task details (shortcut)')
-    .action(async (id: string) => {
-      await showTask(parseInt(id, 10), program.opts());
-    });
+  configureShowCommand(program.command('show <id>').description('Show task details (shortcut)'));
 
-  // task update
-  task
-    .command('update <id>')
-    .description('Update a task')
-    .option('--title <text>', 'New title')
-    .option('--deadline <date>', 'New deadline')
-    .option('--project <name>', 'Change project')
-    .option('--add-tag <tag>', 'Add tag', collect, [])
-    .option('--remove-tag <tag>', 'Remove tag', collect, [])
-    .option('--estimate <duration>', 'New estimate')
-    .option('--bucket <id>', 'Change bucket', parseInt)
-    .action(async (id: string, options) => {
-      await updateTask(parseInt(id, 10), options, program.opts());
-    });
+  const configureUpdateCommand = (cmd: Command) =>
+    cmd
+      .option('--title <text>', 'New title')
+      .option('--deadline <date>', 'New deadline')
+      .option('--project <name>', 'Change project')
+      .option('--add-tag <tag>', 'Add tag', collect, [])
+      .option('--remove-tag <tag>', 'Remove tag', collect, [])
+      .option('--estimate <duration>', 'New estimate')
+      .option('--bucket <id>', 'Change bucket', parseInt)
+      .action(async (id: string, options) => {
+        await updateTask(parseInt(id, 10), options, program.opts());
+      });
 
-  // Shortcut: churn update
-  program
-    .command('update <id>')
-    .description('Update a task (shortcut)')
-    .option('--title <text>', 'New title')
-    .option('--deadline <date>', 'New deadline')
-    .option('--project <name>', 'Change project')
-    .option('--add-tag <tag>', 'Add tag', collect, [])
-    .option('--remove-tag <tag>', 'Remove tag', collect, [])
-    .option('--estimate <duration>', 'New estimate')
-    .action(async (id: string, options) => {
-      await updateTask(parseInt(id, 10), options, program.opts());
-    });
+  // task update / task edit
+  configureUpdateCommand(task.command('update <id>').description('Update a task'));
+  configureUpdateCommand(task.command('edit <id>').description('Update a task (synonym for update)'));
+
+  // Shortcuts: churn update, churn edit
+  configureUpdateCommand(program.command('update <id>').description('Update a task (shortcut)'));
+  configureUpdateCommand(program.command('edit <id>').description('Update a task (shortcut for task update)'));
+
+  const configureCompleteCommand = (cmd: Command) =>
+    cmd
+      .option('--at <datetime>', 'Completion time')
+      .action(async (id: string, options) => {
+        await completeTask(parseInt(id, 10), options, program.opts());
+      });
 
   // task complete
-  task
-    .command('complete <id>')
-    .description('Mark task as complete')
-    .option('--at <datetime>', 'Completion time')
-    .action(async (id: string, options) => {
-      await completeTask(parseInt(id, 10), options, program.opts());
-    });
+  configureCompleteCommand(task.command('complete <id>').description('Mark task as complete'));
 
   // Shortcuts: churn complete, churn done
-  program
-    .command('complete <id>')
-    .description('Mark task as complete (shortcut)')
-    .option('--at <datetime>', 'Completion time')
-    .action(async (id: string, options) => {
-      await completeTask(parseInt(id, 10), options, program.opts());
-    });
+  configureCompleteCommand(program.command('complete <id>').description('Mark task as complete (shortcut)'));
+  configureCompleteCommand(program.command('done <id>').description('Mark task as complete (shortcut)'));
 
-  program
-    .command('done <id>')
-    .description('Mark task as complete (shortcut)')
-    .option('--at <datetime>', 'Completion time')
-    .action(async (id: string, options) => {
-      await completeTask(parseInt(id, 10), options, program.opts());
-    });
+  const configureDeleteCommand = (cmd: Command) =>
+    cmd
+      .option('--force', 'Skip confirmation')
+      .action(async (id: string, options) => {
+        await deleteTask(parseInt(id, 10), options, program.opts());
+      });
 
   // task delete
-  task
-    .command('delete <id>')
-    .description('Delete a task')
-    .option('--force', 'Skip confirmation')
-    .action(async (id: string, options) => {
-      await deleteTask(parseInt(id, 10), options, program.opts());
-    });
+  configureDeleteCommand(task.command('delete <id>').description('Delete a task'));
 
   // Shortcuts: churn delete, churn rm
-  program
-    .command('delete <id>')
-    .description('Delete a task (shortcut)')
-    .option('--force', 'Skip confirmation')
-    .action(async (id: string, options) => {
-      await deleteTask(parseInt(id, 10), options, program.opts());
-    });
+  configureDeleteCommand(program.command('delete <id>').description('Delete a task (shortcut)'));
+  configureDeleteCommand(program.command('rm <id>').description('Delete a task (shortcut)'));
 
-  program
-    .command('rm <id>')
-    .description('Delete a task (shortcut)')
-    .option('--force', 'Skip confirmation')
-    .action(async (id: string, options) => {
-      await deleteTask(parseInt(id, 10), options, program.opts());
+  const configureReopenCommand = (cmd: Command) =>
+    cmd.action(async (id: string) => {
+      await reopenTask(parseInt(id, 10), program.opts());
     });
 
   // task reopen
-  task
-    .command('reopen <id>')
-    .description('Reopen a completed task')
-    .action(async (id: string) => {
-      await reopenTask(parseInt(id, 10), program.opts());
-    });
+  configureReopenCommand(task.command('reopen <id>').description('Reopen a completed task'));
 
   // Shortcut: churn reopen
-  program
-    .command('reopen <id>')
-    .description('Reopen a completed task (shortcut)')
-    .action(async (id: string) => {
-      await reopenTask(parseInt(id, 10), program.opts());
+  configureReopenCommand(program.command('reopen <id>').description('Reopen a completed task (shortcut)'));
+
+  const configureSearchCommand = (cmd: Command) =>
+    cmd.action(async (queryParts: string[]) => {
+      await searchTasks(queryParts.join(' '), program.opts());
     });
 
   // task search
-  task
-    .command('search <query...>')
-    .description('Search tasks')
-    .action(async (queryParts: string[]) => {
-      await searchTasks(queryParts.join(' '), program.opts());
-    });
+  configureSearchCommand(task.command('search <query...>').description('Search tasks'));
 
   // Shortcut: churn search
-  program
-    .command('search <query...>')
-    .description('Search tasks (shortcut)')
-    .action(async (queryParts: string[]) => {
-      await searchTasks(queryParts.join(' '), program.opts());
-    });
+  configureSearchCommand(program.command('search <query...>').description('Search tasks (shortcut)'));
 }
 
 function collect(value: string, previous: string[]): string[] {
