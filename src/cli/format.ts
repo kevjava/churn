@@ -82,24 +82,32 @@ export function truncate(str: string, len: number): string {
   return str.slice(0, len - 1) + '…';
 }
 
-export function formatTaskRow(task: Task | TaskWithPriority, showPriority = false): string {
+export function formatTaskRow(task: Task | TaskWithPriority, showPriority = false, bucketMap?: Map<number, string>): string {
   const id = padLeft(String(task.id), 4);
   const priority = 'priority' in task ? formatPriority(task.priority) : '-';
   const status = padRight(formatStatus(task.status), 8);
   const title = truncate(task.title, 30);
   const project = task.project ? `@${task.project}` : '-';
+  const bucket = bucketMap ? (task.bucket_id ? truncate(bucketMap.get(task.bucket_id) ?? '-', 12) : '-') : undefined;
   const due = formatDate(task.deadline ?? task.next_due_at);
 
+  const parts = [id];
   if (showPriority) {
     const color = 'priority' in task ? priorityColor(task.priority) : '';
     const reset = resetColor();
-    return `${id}  ${color}${padLeft(priority, 5)}${reset}  ${status}  ${padRight(title, 30)}  ${padRight(project, 12)}  ${due}`;
+    parts.push(`${color}${padLeft(priority, 5)}${reset}`);
   }
-
-  return `${id}  ${status}  ${padRight(title, 30)}  ${padRight(project, 12)}  ${due}`;
+  parts.push(status);
+  parts.push(padRight(title, 30));
+  parts.push(padRight(project, 12));
+  if (bucket !== undefined) {
+    parts.push(padRight(bucket, 12));
+  }
+  parts.push(due);
+  return parts.join('  ');
 }
 
-export function formatTaskTable(tasks: (Task | TaskWithPriority)[], showPriority = false): string {
+export function formatTaskTable(tasks: (Task | TaskWithPriority)[], showPriority = false, bucketMap?: Map<number, string>): string {
   if (tasks.length === 0) {
     return 'No tasks found.';
   }
@@ -108,16 +116,26 @@ export function formatTaskTable(tasks: (Task | TaskWithPriority)[], showPriority
 
   // Header
   if (showPriority) {
-    lines.push(`  ID    Pri  Status    Title                           Project       Due`);
-    lines.push(`----  -----  --------  ------------------------------  ------------  ----------`);
+    if (bucketMap) {
+      lines.push(`  ID    Pri  Status    Title                           Project       Bucket        Due`);
+      lines.push(`----  -----  --------  ------------------------------  ------------  ------------  ----------`);
+    } else {
+      lines.push(`  ID    Pri  Status    Title                           Project       Due`);
+      lines.push(`----  -----  --------  ------------------------------  ------------  ----------`);
+    }
   } else {
-    lines.push(`  ID  Status    Title                           Project       Due`);
-    lines.push(`----  --------  ------------------------------  ------------  ----------`);
+    if (bucketMap) {
+      lines.push(`  ID  Status    Title                           Project       Bucket        Due`);
+      lines.push(`----  --------  ------------------------------  ------------  ------------  ----------`);
+    } else {
+      lines.push(`  ID  Status    Title                           Project       Due`);
+      lines.push(`----  --------  ------------------------------  ------------  ----------`);
+    }
   }
 
   // Rows
   for (const task of tasks) {
-    lines.push(formatTaskRow(task, showPriority));
+    lines.push(formatTaskRow(task, showPriority, bucketMap));
   }
 
   return lines.join('\n');
