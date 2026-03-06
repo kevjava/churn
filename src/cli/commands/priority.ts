@@ -108,7 +108,7 @@ async function showTimeline(
     fromDate.setHours(0, 0, 0, 0);
 
     let toDate: Date;
-    const effectiveDeadline = task.next_due_at || task.deadline || task.curve_config.deadline;
+    const effectiveDeadline = task.deadline || task.next_due_at || task.curve_config.deadline;
 
     if (options.to) {
       toDate = new Date(options.to);
