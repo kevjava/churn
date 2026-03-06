@@ -91,19 +91,20 @@ export function formatTaskRow(task: Task | TaskWithPriority, showPriority = fals
   const bucket = bucketMap ? (task.bucket_id ? truncate(bucketMap.get(task.bucket_id) ?? '-', 12) : '-') : undefined;
   const due = formatDate(task.deadline ?? task.next_due_at);
 
+  const parts = [id];
   if (showPriority) {
     const color = 'priority' in task ? priorityColor(task.priority) : '';
     const reset = resetColor();
-    if (bucket !== undefined) {
-      return `${id}  ${color}${padLeft(priority, 5)}${reset}  ${status}  ${padRight(title, 30)}  ${padRight(project, 12)}  ${padRight(bucket, 12)}  ${due}`;
-    }
-    return `${id}  ${color}${padLeft(priority, 5)}${reset}  ${status}  ${padRight(title, 30)}  ${padRight(project, 12)}  ${due}`;
+    parts.push(`${color}${padLeft(priority, 5)}${reset}`);
   }
-
+  parts.push(status);
+  parts.push(padRight(title, 30));
+  parts.push(padRight(project, 12));
   if (bucket !== undefined) {
-    return `${id}  ${status}  ${padRight(title, 30)}  ${padRight(project, 12)}  ${padRight(bucket, 12)}  ${due}`;
+    parts.push(padRight(bucket, 12));
   }
-  return `${id}  ${status}  ${padRight(title, 30)}  ${padRight(project, 12)}  ${due}`;
+  parts.push(due);
+  return parts.join('  ');
 }
 
 export function formatTaskTable(tasks: (Task | TaskWithPriority)[], showPriority = false, bucketMap?: Map<number, string>): string {
